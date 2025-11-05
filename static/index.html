@@ -1,0 +1,639 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TriageSense — Symptom Report + Conversation</title>
+  <style>
+    :root {
+      --accent: #3d6df0;
+      --muted: #6b7280;
+      --bg: #f5f7ff;
+      --card: #ffffff;
+      --border: #e6e9ef;
+      --danger: #dc2626;
+      --soft: #f7f9fc;
+      --urgent: #ff9f43;
+      --self: #16a34a;
+      --nonurgent: #2563eb;
+    }
+
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7ff, #e8ecf9);
+      margin: 0;
+      padding: 36px 12px;
+      display: flex;
+      justify-content: center;
+      color: #111;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .container {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(20, 30, 80, 0.06);
+      padding: 28px;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 1.4rem;
+    }
+
+    header .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      margin-top: 8px;
+      resize: vertical;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+    }
+
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn.secondary {
+      background: #eef3ff;
+      color: var(--accent);
+      border: 1px solid rgba(61, 109, 240, 0.08);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .banner {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #fff5f5;
+      border-left: 6px solid #d33;
+      color: #6b0000;
+    }
+
+    .banner p {
+      margin: 6px 0 0 0;
+      font-size: 0.95rem;
+      color: #6b0000;
+    }
+
+    .status {
+      margin-left: 8px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .results-row {
+      margin-top: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    @media (max-width: 900px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    .card {
+      background: var(--soft);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      min-height: 120px;
+      box-shadow: 0 2px 8px rgba(10, 20, 50, 0.03);
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      color: var(--accent);
+      font-size: 1rem;
+      border-bottom: 2px solid rgba(61, 109, 240, 0.08);
+      padding-bottom: 6px;
+    }
+
+    .card .content {
+      color: #111;
+      line-height: 1.45;
+      font-size: 0.96rem;
+      white-space: pre-wrap;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .card li {
+      margin-bottom: 8px;
+    }
+
+    .badge-wrap {
+      width: 220px;
+      min-width: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .triage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .triage-badge.emergency {
+      background: var(--danger);
+    }
+
+    .triage-badge.urgent {
+      background: var(--urgent);
+      color: #4a2b00;
+    }
+
+    .triage-badge.nonurgent {
+      background: var(--nonurgent);
+    }
+
+    .triage-badge.self {
+      background: var(--self);
+    }
+
+    .triage-reason {
+      font-size: 0.92rem;
+      color: var(--muted);
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* conversation panel */
+    .conversation {
+      margin-top: 18px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 12px;
+    }
+
+    .conv-list {
+      max-height: 260px;
+      overflow: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .conv-msg {
+      padding: 10px 12px;
+      border-radius: 10px;
+      max-width: 85%;
+    }
+
+    .conv-msg.user {
+      align-self: flex-end;
+      background: #eef3ff;
+      border: 1px solid rgba(61, 109, 240, 0.08);
+    }
+
+    .conv-msg.assistant {
+      align-self: flex-start;
+      background: #f6f8fb;
+      border: 1px solid #eef3fb;
+    }
+
+    .conv-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .conv-input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      min-height: 48px;
+      resize: vertical;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    @media (max-width:880px) {
+      .results-row {
+        flex-direction: column-reverse;
+      }
+
+      .badge-wrap {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="container">
+      <header>
+        <div>
+          <h1>TriageSense</h1>
+          <div class="sub">Professional triage summary — educational only</div>
+        </div>
+        <div class="sub">Local demo</div>
+      </header>
+
+      <div class="note">Not a substitute for medical care. For emergencies call local emergency services immediately.
+      </div>
+
+      <label for="symptoms">Describe your symptoms</label>
+      <textarea id="symptoms"
+        placeholder="e.g., Sharp central chest pain started 1 hour ago, radiates to left arm, shortness of breath"></textarea>
+
+      <div id="banner" class="banner" style="display:none;">
+        <strong>⚠️ Possible emergency detected</strong>
+        <p>If you have chest pain, severe breathing difficulty, fainting, signs of stroke, or uncontrolled bleeding —
+          call emergency services now.</p>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="callEmergency" class="btn secondary" type="button">Call emergency</button>
+          <button id="proceedAnyway" class="btn" type="button">Proceed to triage</button>
+          <button id="clearBanner" class="btn ghost" type="button">Clear</button>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:12px;">
+        <button id="analyzeBtn" class="btn">Analyze</button>
+        <button id="clearBtn" class="btn secondary">Clear</button>
+        <div id="status" class="status" aria-live="polite"></div>
+      </div>
+
+      <div class="results-row">
+        <div class="cards" id="cardsArea" style="display:none;">
+          <div class="card">
+            <h3>Summary of Symptoms</h3>
+            <div id="summary" class="content">—</div>
+          </div>
+          <div class="card">
+            <h3>Probable Causes / Clinical Considerations</h3>
+            <div id="reasons" class="content">—</div>
+          </div>
+          <div class="card">
+            <h3>Immediate Actions & Safe Self-Care</h3>
+            <div id="actions" class="content">—</div>
+          </div>
+        </div>
+
+        <div class="badge-wrap">
+          <div id="triageBadge" class="triage-badge" style="display:none;">LEVEL</div>
+          <div id="triageReason" class="triage-reason" style="display:none;">reason</div>
+        </div>
+      </div>
+      <!-- Conversation box -->
+      <div id="conversationPanel" class="conversation" style="display:none;">
+        <div style="font-weight:700; margin-bottom:8px;">Conversation</div>
+        <div id="convList" class="conv-list"></div>
+        <div class="conv-controls">
+          <textarea id="convInput" class="conv-input" placeholder="Ask a follow-up question..."></textarea>
+          <button id="convSend" class="btn">Send</button>
+        </div>
+      </div>
+      <div id="raw" class="raw" style="display:none;"></div>
+
+      <footer>© 2025 TriageSense — educational prototype, not medical advice.</footer>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- Helpers & state ---------- */
+    const symptomsEl = document.getElementById('symptoms');
+    const banner = document.getElementById('banner');
+    const proceedBtn = document.getElementById('proceedAnyway');
+    const callBtn = document.getElementById('callEmergency');
+    const clearBannerBtn = document.getElementById('clearBanner');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusEl = document.getElementById('status');
+
+    const cardsArea = document.getElementById('cardsArea');
+    const summaryEl = document.getElementById('summary');
+    const reasonsEl = document.getElementById('reasons');
+    const actionsEl = document.getElementById('actions');
+
+    const triageBadgeEl = document.getElementById('triageBadge');
+    const triageReasonEl = document.getElementById('triageReason');
+    const conversationPanel = document.getElementById('conversationPanel');
+    const convList = document.getElementById('convList');
+    const convInput = document.getElementById('convInput');
+    const convSend = document.getElementById('convSend');
+    const rawEl = document.getElementById('raw');
+
+    let latestSubmissionId = null;
+    let userConfirmedProceed = false;
+
+    /* Emergency detection keywords (same list as backend) */
+    const emergencyKeywords = [
+      "chest pain", "shortness of breath", "difficulty breathing", "severe shortness",
+      "faint", "fainting", "unconscious", "not breathing", "severe bleeding", "hemorrhage",
+      "stroke", "face droop", "slurred speech", "sudden weakness", "severe allergic", "anaphylaxis"
+    ];
+
+    function detectEmergency(text) { if (!text) return false; const t = text.toLowerCase(); return emergencyKeywords.some(k => t.includes(k)); }
+
+    /* live detection */
+    symptomsEl.addEventListener('input', () => { userConfirmedProceed = false; const isE = detectEmergency(symptomsEl.value); banner.style.display = isE ? 'block' : 'none'; });
+
+    callBtn.addEventListener('click', () => { alert("If this is an emergency call your local emergency number now."); });
+    clearBannerBtn.addEventListener('click', () => { banner.style.display = 'none'; });
+
+    proceedBtn.addEventListener('click', () => { userConfirmedProceed = true; banner.style.display = 'none'; statusEl.textContent = 'Proceeding to triage...'; setTimeout(() => submitSymptoms(), 200); });
+
+    clearBtn.addEventListener('click', () => { symptomsEl.value = ''; resetDisplay(); });
+
+    /* ---------- Submit triage ---------- */
+    analyzeBtn.addEventListener('click', async (e) => {
+      e.preventDefault(); statusEl.textContent = ''; cardsArea.style.display = 'none'; rawEl.style.display = 'none'; conversationPanel.style.display = 'none';
+      const symptoms = symptomsEl.value.trim(); if (!symptoms) { statusEl.textContent = 'Please enter symptoms.'; return; }
+      const isE = detectEmergency(symptoms); if (isE && !userConfirmedProceed) { banner.style.display = 'block'; statusEl.textContent = 'Emergency terms detected — confirm to proceed or call emergency services.'; return; }
+      submitSymptoms();
+    });
+
+    async function submitSymptoms() {
+      const symptoms = symptomsEl.value.trim(); if (!symptoms) return;
+      analyzeBtn.disabled = true; statusEl.textContent = 'Analyzing...';
+      try {
+        const res = await fetch('/triage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symptoms }) });
+        const data = await res.json();
+        if (!res.ok) { statusEl.textContent = 'Error: ' + (data.detail || res.statusText); analyzeBtn.disabled = false; return; }
+        // data contains triage_reply, triage_level, triage_reason, submission_id
+        latestSubmissionId = data.submission_id || null;
+        handleTriageResult(data.triage_reply || '', data.triage_level || null, data.triage_reason || null);
+      } catch (err) { statusEl.textContent = 'Network error: ' + err.message; }
+      finally { analyzeBtn.disabled = false; userConfirmedProceed = false; }
+    }
+
+    /* ---------- Render triage result ---------- */
+    function handleTriageResult(replyText, triageLevel, triageReason) {
+      // parse and render three cards (reuse existing parser)
+      const parsed = parseReplyIntoBlocks(replyText);
+      if (parsed) {
+        summaryEl.innerHTML = paragraphize(parsed.summary);
+        reasonsEl.innerHTML = listify(parsed.reasons);
+        actionsEl.innerHTML = listify(parsed.actions);
+        rawEl.style.display = 'none';
+        cardsArea.style.display = 'grid';
+      } else {
+        // fallback: show raw in first card
+        summaryEl.innerHTML = '<pre style="white-space:pre-wrap;">' + escapeHtml(replyText) + '</pre>';
+        reasonsEl.innerHTML = '';
+        actionsEl.innerHTML = '';
+        cardsArea.style.display = 'grid';
+      }
+
+      // badge
+      if (triageLevel) {
+        setTriageBadge(triageLevel);
+        triageReasonEl.textContent = triageReason || '';
+        triageBadgeEl.style.display = 'inline-flex';
+        triageReasonEl.style.display = 'block';
+      } else {
+        triageBadgeEl.style.display = 'none';
+        triageReasonEl.style.display = 'none';
+      }
+
+      // After showing results, fetch conversation history for this submission if available
+      if (latestSubmissionId) {
+        loadConversation(latestSubmissionId);
+      }
+    }
+
+    /* Badge UI */
+    function setTriageBadge(level) {
+      const el = triageBadgeEl;
+      el.className = 'triage-badge';
+      let text = '';
+      if (!level) { el.style.display = 'none'; return; }
+      switch (level.toLowerCase()) {
+        case 'emergency': el.classList.add('emergency'); text = 'EMERGENCY'; break;
+        case 'urgent': el.classList.add('urgent'); text = 'URGENT'; break;
+        case 'self-care': el.classList.add('self'); text = 'SELF-CARE'; break;
+        case 'non-urgent': el.classList.add('nonurgent'); text = 'NON-URGENT'; break;
+        default: el.classList.add('nonurgent'); text = level.toUpperCase();
+      }
+      el.textContent = text;
+    }
+
+    /* ---------- Conversation: load & send ---------- */
+    async function loadConversation(submissionId) {
+      // Use /submissions to fetch the stored reply + create conversation view
+      try {
+        const res = await fetch(`/submissions?limit=50`);
+        const json = await res.json();
+        // find the submission row
+        const subs = json.submissions || [];
+        const s = subs.find(x => x.id === submissionId);
+        // show conversation panel
+        convList.innerHTML = ''; conversationPanel.style.display = 'block';
+        // show initial assistant reply as first item
+        if (s) {
+          appendMessage('assistant', s.reply);
+        } else {
+          // fallback: we might not find it—still show conversation
+        }
+        // Optionally fetch messages endpoint: there is no specific /messages endpoint; instead we'll use /converse to append
+        // For initial load we rely on the assistant reply stored in submissions.
+        // If you want full message history, we could add an endpoint; for now, the conversation builds as you send follow-ups.
+      } catch (err) {
+        console.error('loadConversation error', err);
+      }
+    }
+
+    /* Append a message to the convList */
+    function appendMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = 'conv-msg ' + (role === 'user' ? 'user' : 'assistant');
+      div.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+      convList.appendChild(div);
+      convList.scrollTop = convList.scrollHeight;
+    }
+
+    /* Send a follow-up via /converse */
+    convSend.addEventListener('click', async () => {
+      const msg = convInput.value.trim();
+      if (!msg || !latestSubmissionId) { return; }
+      appendMessage('user', msg);
+      convInput.value = '';
+      convSend.disabled = true;
+      try {
+        const res = await fetch('/converse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submission_id: latestSubmissionId, message: msg })
+        });
+        const data = await res.json();
+        if (!res.ok) { appendMessage('assistant', 'Error: ' + (data.detail || res.statusText)); }
+        else {
+          appendMessage('assistant', data.assistant_reply || '(no reply)');
+          // optionally update triage level if we want (not changing here)
+        }
+      } catch (err) {
+        appendMessage('assistant', 'Network error: ' + err.message);
+      } finally {
+        convSend.disabled = false;
+      }
+    });
+
+    /* ---------- Parsing helpers (copied from previous working parser) ---------- */
+    /* Parse model reply into {summary, reasons, actions} robustly. */
+    function parseReplyIntoBlocks(text) {
+      if (!text) return null;
+      const t = text.replace(/\r\n/g, '\n').trim();
+      const reSummary = /(?:\s*#{1,}\s*)?\s*\d{0,2}\.?\s*(?:Summary of Symptoms|Summary of symptoms|Summary)\s*:?\s*/im;
+      const reReasons = /(?:\s*#{1,}\s*)?\s*\d{0,2}\.?\s*(?:Probable Causes|Probable Causes or Clinical Considerations|Possible Reasons|Possible reasons \/ likely causes|Possible causes|Probable causes)\s*:?\s*/im;
+      const reActions = /(?:\s*#{1,}\s*)?\s*\d{0,2}\.?\s*(?:Immediate Actions and Safe Self-Care Steps|Immediate Actions|Immediate actions & “do no harm” measures|Immediate actions & "do no harm" measures|Immediate actions and safe self-care steps|Immediate actions and safe self care)\s*:?\s*/im;
+      const m1 = reSummary.exec(t);
+      const m2 = reReasons.exec(t);
+      const m3 = reActions.exec(t);
+
+      if (!m1 || !m2 || !m3) {
+        const low = t.toLowerCase();
+        const idx1 = low.indexOf('summary of');
+        const idx2 = low.indexOf('possible reasons');
+        const idx2alt = low.indexOf('probable causes');
+        const idx3 = low.indexOf('immediate actions');
+        const p1 = (m1 && m1.index) ? m1.index : idx1 >= 0 ? idx1 : -1;
+        const p2 = (m2 && m2.index) ? m2.index : (idx2 >= 0 ? idx2 : (idx2alt >= 0 ? idx2alt : -1));
+        const p3 = (m3 && m3.index) ? m3.index : idx3 >= 0 ? idx3 : -1;
+        if (p1 < 0 || p2 < 0 || p3 < 0) return null;
+        const after = (i) => { const nl = t.indexOf('\n', i); return nl >= 0 ? nl + 1 : i; };
+        const s1 = t.slice(after(p1), p2).trim();
+        const s2 = t.slice(after(p2), p3).trim();
+        const s3 = t.slice(after(p3)).trim();
+        return { summary: cleanupBlock(s1), reasons: cleanupBlock(s2), actions: cleanupBlock(s3) };
+      }
+
+      try {
+        const start1 = m1.index + m1[0].length;
+        const start2 = m2.index + m2[0].length;
+        const start3 = m3.index + m3[0].length;
+        const s1 = t.slice(start1, m2.index).trim();
+        const s2 = t.slice(start2, m3.index).trim();
+        const s3 = t.slice(start3).trim();
+        return { summary: cleanupBlock(s1), reasons: cleanupBlock(s2), actions: cleanupBlock(s3) };
+      } catch (e) { return null; }
+    }
+
+    function cleanupBlock(s) {
+      if (!s) return '';
+      s = s.replace(/^\s*#{1,}\s*/gm, '');
+      s = s.replace(/^\s*\d{1,2}\.\s*/gm, '');
+      s = s.replace(/^\s*[-*•]\s*/gm, '- ');
+      return s.trim();
+    }
+
+    function listify(text) {
+      if (!text) return '';
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      const bullets = lines.filter(l => l.startsWith('-') || l.match(/^\d+\./));
+      if (bullets.length > 0) {
+        return '<ul>' + lines.map(line => {
+          const cleaned = line.replace(/^[-*]\s*/, '').replace(/^\d+\.\s*/, '');
+          return '<li>' + escapeHtml(cleaned) + '</li>';
+        }).join('') + '</ul>';
+      } else {
+        return paragraphize(text);
+      }
+    }
+
+    function paragraphize(text) {
+      if (!text) return '';
+      const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      return parts.map(p => '<p>' + escapeHtml(p).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') + '</p>').join('');
+    }
+
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    /* ---------- Done ---------- */
+  </script>
+</body>
+
+</html>
