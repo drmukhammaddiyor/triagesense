@@ -1,4 +1,4 @@
-﻿# Dockerfile — production friendly using python slim and entrypoint wrapper
+﻿# Dockerfile — production friendly with entrypoint normalization (handles CRLF -> LF)
 FROM python:3.11-slim
 
 # Set env
@@ -19,8 +19,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy project files
 COPY . /app
 
-# Make entrypoint executable
-RUN chmod +x /app/entrypoint.sh
+# Normalize line endings and make entrypoint executable (fix Windows -> Linux script issues)
+# This converts CRLF to LF and ensures the script is executable inside the image
+RUN if [ -f /app/entrypoint.sh ]; then sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh; fi
 
 # Expose port
 EXPOSE 8000
