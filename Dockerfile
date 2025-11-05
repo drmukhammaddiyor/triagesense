@@ -1,4 +1,4 @@
-﻿# Dockerfile — run gunicorn via inline sh to avoid external script exec issues
+﻿# Dockerfile — use Python-based startup to handle PORT reliably
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -16,5 +16,5 @@ COPY . /app
 
 EXPOSE 8000
 
-# Use a small inline shell to ensure PORT is valid then start gunicorn
-ENTRYPOINT ["sh", "-c", "if [ -z \"\" ] || [ \"\" = \"''\" ]; then export PORT=8000; fi; echo Starting Gunicorn on port: ; exec gunicorn -k uvicorn.workers.UvicornWorker app:app --bind 0.0.0.0: --workers 2 --threads 2"]
+# Launch via python start.py so environment PORT parsing is robust across platforms
+ENTRYPOINT ["python", "/app/start.py"]
