@@ -1,4 +1,4 @@
-﻿# Dockerfile — production friendly using python slim and gunicorn + uvicorn workers
+﻿# Dockerfile — production friendly using python slim and entrypoint wrapper
 FROM python:3.11-slim
 
 # Set env
@@ -19,8 +19,11 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy project files
 COPY . /app
 
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
-# Start command: use gunicorn + uvicorn workers, bind to PORT env set by Render
-CMD exec gunicorn -k uvicorn.workers.UvicornWorker app:app --bind 0.0.0.0: --workers 2 --threads 2
+# Use the entrypoint script (it handles empty PORT and starts gunicorn)
+ENTRYPOINT ["/app/entrypoint.sh"]
